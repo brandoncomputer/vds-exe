@@ -1,3 +1,7 @@
+THIS TRUNK IS NOT ACCEPTED BY THE COMPUTING WORLD AT LARGE. YOUR FILES MAY BE FLAGGED AS VIRUS, AND CONSEQUENCES FROM THAT IS IN YOUR HANDS.
+
+This trunk is an attempt to rectify the above situaion.
+
 # Visual DialogShell
 
 Visual DialogShell is a way forward for DialogScript syntax within Powershell ~ this project exists to provide a vehicle for the spirit of the DialogScript language to continue - providing a concise, powerful, straightforward language with seemingly untyped variables.
