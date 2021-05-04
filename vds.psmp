@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ProjectPreferences xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <InputFileName>C:\vds-psexe\trunk\vds.psm1</InputFileName>
+  <DestinationPath>C:\vds-psexe\trunk\vds.dll</DestinationPath>
+  <AssemblyTitle>Visual DialogShell</AssemblyTitle>
+  <AssemblyDescription>Visual DialogShell</AssemblyDescription>
+  <AssemblyCompany>Brandon Cunningham</AssemblyCompany>
+  <AssemblyProduct>Visual DialogShell</AssemblyProduct>
+  <AssemblyCopyright>Brandon Cunningham</AssemblyCopyright>
+  <AssemblyVersionMajor>0</AssemblyVersionMajor>
+  <AssemblyVersionMinor>3</AssemblyVersionMinor>
+  <AssemblyVersionBuild>1</AssemblyVersionBuild>
+  <AssemblyVersionRevision>3</AssemblyVersionRevision>
+  <LicenseEnabled>false</LicenseEnabled>
+  <LicenseRegistredTo />
+  <LicenseExpiredDateEnabled>false</LicenseExpiredDateEnabled>
+  <LicenseExpiredDate>04.05.2021</LicenseExpiredDate>
+  <OtherShowLoadingMessageEnabled>false</OtherShowLoadingMessageEnabled>
+  <OtherScriptBlockLoggingDisabled>false</OtherScriptBlockLoggingDisabled>
+  <OtherShowLoadingMessage>PSProtector Module has been loaded - Registered To: #REGISTEREDTO# (#EXPIREDATE#)</OtherShowLoadingMessage>
+</ProjectPreferences>
