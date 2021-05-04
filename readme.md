@@ -34,6 +34,7 @@ I believe in simplicity. If you want to update the project, but don't want to ge
 # Getting Started
 Compile order: 
 make.bat (recently simplified)
+ - Unfortunately, the toolchain on the whole is no longer free. To compile vds.psm1 you will need to purchase PS Protector and compile vds.psmp.
 
 ## Prerequisites
 
