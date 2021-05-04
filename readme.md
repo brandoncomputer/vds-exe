@@ -47,6 +47,7 @@ c:\vds\trunk\compile\DialogShell.exe "$(FULL_CURRENT_PATH)" -cpath
 DialogShell.exe is partially compatible with Visual Studio Code as a console, but may need more work.
 
 The intent is to continue expanding through PowerShell Core, with the current version being 7, and even expanding into other operating systems. To do so, we need to flip our thinking back to the module vds.psm1 and come up with other unique 'tack ons' for these other systems.
+ - Update: DiaogShell in compiled form no longer is seeking this compatibility.
 
 Example script syntax:
 

@@ -1,5 +1,5 @@
 directory change "$(regread "HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\DialogShell\" "InstallLocation")\compile"
-$MyForm = dialog create "Project Compile" 0 0 389 395
+$MyForm = dialog create "Project Compile" 0 0 389 340
 $MyForm.icon = "$(regread "HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\DialogShell\" "InstallLocation")\res\compile.ico"
     $TextBox1 = dialog add $MyForm TextBox 25 20 250 20 
     dialog settip $textbox1 "Inputfile" 
@@ -84,12 +84,12 @@ $MyForm.icon = "$(regread "HKLM:\Software\Microsoft\Windows\CurrentVersion\Unins
                 dialog property $TextBox10 Scrollbars "none" 
                 dialog property $TextBox10 acceptstab "" 
                 dialog property $TextBox10 acceptsreturn ""  
-        $CheckBox1 = dialog add $MyForm CheckBox 150 135 100 20 "x86" 
+      <#  $CheckBox1 = dialog add $MyForm CheckBox 150 135 100 20 "x86" 
                 dialog property $CheckBox1 Appearance "Normal" 
                 dialog property $CheckBox1 Threestate ""  
-        $CheckBox2 = dialog add $MyForm CheckBox 150 250 100 20 "x64" 
+        $CheckBox2 = dialog add $MyForm CheckBox 150 250 100 20 "x64"  
                 dialog property $CheckBox2 Appearance "Normal" 
-                dialog property $CheckBox2 Threestate ""  
+                dialog property $CheckBox2 Threestate ""  #>
         $CheckBox3 = dialog add $MyForm CheckBox 175 20 100 20 "-sta" 
                 dialog property $CheckBox3 Appearance "Normal" 
                 dialog property $CheckBox3 Threestate ""  
@@ -100,17 +100,17 @@ $MyForm.icon = "$(regread "HKLM:\Software\Microsoft\Windows\CurrentVersion\Unins
                 dialog property $CheckBox5 Appearance "Normal" 
                 dialog property $CheckBox5 Threestate ""  
                 $CheckBox6 = dialog add $MyForm CheckBox 200 16 335 20 "Require Admin"
-                $CheckBox7 = dialog add $MyForm CheckBox 225 16 335 20 ".Net Core / Pwsh 7"
-                $TextBox11 = dialog add $MyForm TextBox 250 16 335 20
-                dialog settip $TextBox11 "Altnernative Pwsh Path (or just pwsh)"
-                dialog disable $TextBox11
-                $Button4 = dialog add $MyForm Button 275 16 335 20 "Load .pil"
-                $Button5 = dialog add $MyForm Button 300 16 335 20 "Save .pil"      
-                $Button6 = dialog add $MyForm Button 325 16 335 20 "Compile" 
+             #   $CheckBox7 = dialog add $MyForm CheckBox 225 16 335 20 ".Net Core / Pwsh 7"
+             #   $TextBox11 = dialog add $MyForm TextBox 250 16 335 20
+             #   dialog settip $TextBox11 "Altnernative Pwsh Path (or just pwsh)"
+             #   dialog disable $TextBox11
+                $Button4 = dialog add $MyForm Button 225 16 335 20 "Load .pil"
+                $Button5 = dialog add $MyForm Button 250 16 335 20 "Save .pil"      
+                $Button6 = dialog add $MyForm Button 275 16 335 20 "Compile" 
         dialog property $CheckBox6 appearance "Button"
         dialog property $CheckBox6 textalign "MiddleCenter"
-        dialog property $CheckBox7 appearance "Button"
-        dialog property $CheckBox7 textalign "MiddleCenter"
+      <#  dialog property $CheckBox7 appearance "Button"
+        dialog property $CheckBox7 textalign "MiddleCenter" #>
         if ($args[0])
         {
                 inifile open $args[0]
@@ -137,6 +137,7 @@ $MyForm.icon = "$(regread "HKLM:\Software\Microsoft\Windows\CurrentVersion\Unins
 if ($args[1])
 {directory change $args[1]}
 
+<#
 $CheckBox7.Add_Click({
     if ($CheckBox7.checked -eq $true)
     {dialog enable $TextBox11}
@@ -144,6 +145,7 @@ $CheckBox7.Add_Click({
         dialog clear $TextBox11
     dialog disable $TextBox11}
 })
+#>
         
         $button1.add_Click({$in = $(filedlg 'DialogShell|*.ds1|PowerShell|*.ps1')
         dialog set $textbox1 $in
