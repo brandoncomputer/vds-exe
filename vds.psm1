@@ -1,29 +1,25 @@
+Add-Type -AssemblyName System.Windows.Forms,presentationframework, presentationcore
+
 Add-Type @"
-//" closing above quote for editing c# syntax in another editor.
 using System;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using System.ComponentModel;
-public class vdsForm:Form {
-[DllImport("user32.dll")]
-public static extern bool RegisterHotKey(IntPtr hWnd, int id, int fsModifiers, int vk);
-[DllImport("user32.dll")]
-public static extern bool UnregisterHotKey(IntPtr hWnd, int id);
-    protected override void WndProc(ref Message m) {
-        base.WndProc(ref m);
-        if (m.Msg == 0x0312) {
-            int id = m.WParam.ToInt32();    
-            foreach (Control item in this.Controls) {
-                if (item.Name == "hotkey") {
-                    item.Text = id.ToString();
-                }
-            }
-        }
-    }   
-}
+using System.Collections.Generic;
 
 public class vds {
+	
+		public static void SetCompat() 
+		{
+			//	SetProcessDPIAware();
+	            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+		}
+			
+	    [System.Runtime.InteropServices.DllImport("user32.dll")]
+        public static extern bool SetProcessDPIAware();
+	
 [DllImport("user32.dll")]
 public static extern bool InvertRect(IntPtr hDC, [In] ref RECT lprc);
 
@@ -193,6 +189,88 @@ public static void RightClickAtPoint(int x, int y, int width, int height)
         Adapted to VDS: 20190212
         License: Microsoft Limited Public License
 #>
+
+if ((get-host).version.major -eq 7) {
+	if ((get-host).version.minor -eq 0) {
+Add-Type @"
+using System;
+using System.Drawing;
+using System.Runtime.InteropServices;
+using System.Windows.Forms;
+using System.ComponentModel;
+public class vdsForm:Form {
+[DllImport("user32.dll")]
+public static extern bool RegisterHotKey(IntPtr hWnd, int id, int fsModifiers, int vk);
+[DllImport("user32.dll")]
+public static extern bool UnregisterHotKey(IntPtr hWnd, int id);
+    protected override void WndProc(ref Message m) {
+        base.WndProc(ref m);
+        if (m.Msg == 0x0312) {
+            int id = m.WParam.ToInt32();    
+            foreach (Control item in this.Controls) {
+                if (item.Name == "hotkey") {
+                    item.Text = id.ToString();
+                }
+            }
+        }
+    }   
+}
+"@ -ReferencedAssemblies System.Windows.Forms,System.Drawing,System.Drawing.Primitives,System.Net.Primitives,System.ComponentModel.Primitives,Microsoft.Win32.Primitives
+	}
+	else{
+Add-Type @"
+using System;
+using System.Drawing;
+using System.Runtime.InteropServices;
+using System.Windows.Forms;
+using System.ComponentModel;
+public class vdsForm:Form {
+[DllImport("user32.dll")]
+public static extern bool RegisterHotKey(IntPtr hWnd, int id, int fsModifiers, int vk);
+[DllImport("user32.dll")]
+public static extern bool UnregisterHotKey(IntPtr hWnd, int id);
+    protected override void WndProc(ref Message m) {
+        base.WndProc(ref m);
+        if (m.Msg == 0x0312) {
+            int id = m.WParam.ToInt32();    
+            foreach (Control item in this.Controls) {
+                if (item.Name == "hotkey") {
+                    item.Text = id.ToString();
+                }
+            }
+        }
+    }   
+}
+"@ -ReferencedAssemblies System.Windows.Forms,System.Drawing,System.Drawing.Primitives,System.Net.Primitives,System.ComponentModel.Primitives,Microsoft.Win32.Primitives,System.Windows.Forms.Primitives	
+	}
+}
+else {
+Add-Type @"
+using System;
+using System.Drawing;
+using System.Runtime.InteropServices;
+using System.Windows.Forms;
+using System.ComponentModel;
+public class vdsForm:Form {
+[DllImport("user32.dll")]
+public static extern bool RegisterHotKey(IntPtr hWnd, int id, int fsModifiers, int vk);
+[DllImport("user32.dll")]
+public static extern bool UnregisterHotKey(IntPtr hWnd, int id);
+    protected override void WndProc(ref Message m) {
+        base.WndProc(ref m);
+        if (m.Msg == 0x0312) {
+            int id = m.WParam.ToInt32();    
+            foreach (Control item in this.Controls) {
+                if (item.Name == "hotkey") {
+                    item.Text = id.ToString();
+                }
+            }
+        }
+    }   
+}
+"@ -ReferencedAssemblies System.Windows.Forms,System.Drawing
+}
+
 Add-Type -TypeDefinition @"
 //"
 using System;
@@ -246,11 +324,25 @@ public class Window
     }
 }
 "@
+
+$global:ctscale = 1
+
 $global:xmen = $false
 $global:excelinit = $false
 $global:fieldsep = "|"
 $global:database = new-object System.Data.Odbc.OdbcConnection
 set-alias run invoke-expression
+
+function VisualStyle() {
+	[vds]::SetCompat()
+}
+
+function DPIAware($a) {
+$vscreen = [System.Windows.Forms.SystemInformation]::VirtualScreen.height
+[vds]::SetProcessDPIAware()
+$screen = [System.Windows.Forms.SystemInformation]::VirtualScreen.height
+$global:ctscale = ($screen/$vscreen)
+}
 
 function abs($a) {
 <#
@@ -695,19 +787,19 @@ function ctrl($a) {
 } 
 
 function decrypt ($a, $b){
-    if ($b){
-        [byte[]]$b = $b.split(" ")
-        $secure = $a | ConvertTo-SecureString -Key $b
-        $user = "inconsequential"
-        $credObject = New-Object System.Management.Automation.PSCredential -ArgumentList $user, $secure
-        return ($credObject.GetNetworkCredential().Password)
-    }
-    else{
-        $secure = $a | ConvertTo-SecureString 
-        $user = "inconsequential"
-        $credObject = New-Object System.Management.Automation.PSCredential -ArgumentList $user, $secure
-        return ($credObject.GetNetworkCredential().Password)
-    }
+	if ($b){
+		[byte[]]$b = $b.split(" ")
+		$secure = $a | ConvertTo-SecureString -Key $b
+		$user = "inconsequential"
+		$credObject = New-Object System.Management.Automation.PSCredential -ArgumentList $user, $secure
+		return ($credObject.GetNetworkCredential().Password)
+	}
+	else{
+		$secure = $a | ConvertTo-SecureString 
+		$user = "inconsequential"
+		$credObject = New-Object System.Management.Automation.PSCredential -ArgumentList $user, $secure
+		return ($credObject.GetNetworkCredential().Password)
+	}
 <#
     .SYNOPSIS
     Decrypt an encrypted secret.
@@ -715,16 +807,170 @@ function decrypt ($a, $b){
     .DESCRIPTION
      VDS
     $encrypt = 'Hello'
-    $b = $(encrypt $encrypt 'Aes')
-    $vals = $b.Split($(fieldsep))
-    info $(decrypt $vals[0] $vals[1])
+	$b = $(encrypt $encrypt 'Aes')
+	$vals = $b.Split($(fieldsep))
+	info $(decrypt $vals[0] $vals[1])
     
     .LINK
     https://dialogshell.com/vds/help/index.php/decrypt
 #>
 }
- 
+
  function dialog($a,$b,$c,$d,$e,$f,$g,$h) {
+	function AddControl2 ($mControl){ 
+		$mReturnControl = $null 
+		$ctrol = $mControl.Type | Out-String 
+		$ctrol = $ctrol.trim()
+        switch($ctrol) {
+			"StatusStrip" {
+				$mReturnControl = New-Object System.Windows.Forms.$ctrol
+				$mReturnControl.Name = $mControl.Name
+				Return $mReturnControl
+			}
+			"ToolStrip"{
+				$oolbuttons = New-Object System.Windows.Forms.ToolStrip
+				$oolbuttons.imagescalingsize = new-object System.Drawing.Size([int]($ctscale * 16),[int]($ctscale * 16))
+				$oolbuttons.Name = $mControl.Name
+				$oolbuttons.Text = $mControl.Name
+				foreach ($mProperty in $mControl.Properties){
+					foreach ($split in $mProperty.Value.split(",")) {
+						if ($split -ne "-") {
+							$item = new-object System.Windows.Forms.ToolStripButton
+							$isplit = $split.split("|")
+							$item.name = $isplit[0]
+							if ($(substr $isplit[1] 0 2) -eq 'ht') {
+								$item.image = $(streamimage $isplit[1])
+							}
+							else {
+								$item.image = $(fileimage $isplit[1])
+							}
+						$item.text = $isplit[2]
+							$item.Add_Click({&toolstripitemclick $this})
+						}
+						else {
+							$item = new-object System.Windows.Forms.ToolStripSeparator
+							$item.name = $split
+							$item.text = $split                 
+						}                       
+					$oolbuttons.Items.Add($item) | Out-Null                    
+					}	
+				}
+				 #    $b.Controls.Add($toolbuttons)
+				return $oolbuttons
+			}
+        
+			default{
+				if ($ctrol -eq "MenuStrip"){
+					$global:designribbonctrl = New-Object System.Windows.Forms.$ctrol
+					$designribbonctrl.imagescalingsize = new-object System.Drawing.Size([int]($ctscale * 16),[int]($ctscale * 16))
+					$enutitle = new-object System.Windows.Forms.ToolStripMenuItem
+					$enutitle.Name = $mControl.Name
+					$enutitle.Text = $mControl.Name
+					$global:designribbonctrl.Items.add($enutitle) | Out-Null
+					foreach ($mProperty in $mControl.Properties){
+						foreach ($split in $mProperty.Value.split(",")) {
+							if ($split -ne "-") {
+								$innersplit = $split.split("|")
+								$split = $innersplit[0]
+								$item = new-object System.Windows.Forms.ToolStripMenuItem
+								if ($innersplit[2]) {
+									if ($(substr $innersplit[2] 0 2) -eq 'ht') {
+										$item.image = $(streamimage $innersplit[2])
+									}
+									else {
+									$item.image = $(fileimage $innersplit[2])
+									}
+								}
+								if ($innersplit[1]) {
+									$item.ShortCutKeys = $innersplit[1]
+									$item.ShowShortCutKeys = $true
+								}
+								$item.name = $split
+								$item.text = $split
+								$item.Add_Click({
+									&menuitemclick $this
+								})
+							} 
+							else {
+								$item = new-object System.Windows.Forms.ToolStripSeparator
+								$item.name = $split
+								$item.text = $split                 
+							}                       
+							$enutitle.DropDownItems.Add($item) | Out-Null
+						}
+					}
+					return $global:designribbonctrl
+				}
+				else{
+					$mReturnControl = New-Object System.Windows.Forms.$ctrol
+					$mReturnControl.Name = $mControl.Name
+					$mSizeX=$null
+					$mSizeY=$null
+					foreach ($mProperty in $mControl.Properties){
+						switch ($mProperty.Name){ 
+				#           'Top'   {$mReturnControl.Top=$mProperty.Value} 
+				#           'Left'  {$mReturnControl.Left=$mProperty.Value}  
+							'Width' {$mSizeX=$mProperty.Value} 
+							'Height' {$mSizeY=$mProperty.Value} 
+				#           'Text'  {$mReturnControl.Text=$mProperty.Value}
+							'AccessibilityObject' {}
+							'CanFocus' {}
+							'CanSelect' {}
+							'CompanyName' {}
+							'Container' {}
+							'ContainsFocus' {}
+							'Controls' {}
+							'Created' {}
+							'DataBindings' {}
+							'DeviceDpi' {}
+							'DisplayRectangle' {}
+							'Disposing' {}
+							'Focused' {}
+							'Handle' {}
+							'HasChildren' {}
+							'InvokeRequired' {}
+							'IsDisposed' {}
+							'IsHandleCreated' {}
+							'IsMirrored' {}
+							'LayoutEngine' {}
+							'PreferredHeight' {}
+							'PreferredSize' {}
+							'ProductName' {}
+							'ProductVersion' {}
+							'RecreatingHandle' {}
+							'Right' {}
+							'AccessibleName' {}
+							'AccessibleDefaultActionDescription' {}
+							'AccessibleDescription' {}
+							'AccessibleRole' {}
+							'ImeMode' {}
+							'IsAccessible' {}
+							'Location' {}
+							'Name' {}
+							'Parent' {}
+							'Region' {}
+							'Site' {}
+							'WindowTarget' {}
+							default{ 
+								$prop = $mProperty.Name
+								$val = $mProperty.Value
+								if ($mProperty.value -ne $null){
+									$mReturnControl.$prop = $val
+								}
+							}
+						}
+					} 
+					$mReturnControl.Size = New-Object System.Drawing.Size($mSizeX,$mSizeY) 
+					$mReturnControl.Top = $mReturnControl.Top * $ctscale
+					$mReturnControl.Left = $mReturnControl.Left * $ctscale
+					$mReturnControl.Height = $mReturnControl.Height * $ctscale
+					$mReturnControl.Width = $mReturnControl.Width * $ctscale
+				    ######THIS IS A GOOD SPOT TO BOUNCE BACK PROPERTIES INTO LIST##### 
+					Return $mReturnControl
+				}
+			}
+		}
+	}
      switch ($a) {
          add {
              switch ($c) {
@@ -736,10 +982,10 @@ function decrypt ($a, $b){
                          $Control = New-Object System.Windows.Forms.$c
                      }
                      if ($d -is [int]) {
-                         $Control.Top = $d
-                         $Control.Left = $e
-                         $Control.Width = $f
-                         $Control.Height = $g
+                         $Control.Top = $d * $ctscale
+                         $Control.Left = $e * $ctscale
+                         $Control.Width = $f * $ctscale
+                         $Control.Height = $g * $ctscale
                          $Control.Text = $h
                      }
                      if ($c -ne $null) {
@@ -760,6 +1006,7 @@ function decrypt ($a, $b){
                  menustrip { 
                      if ($global:xmen -ne $true) {
                          $global:menuribbon = new-object System.Windows.Forms.MenuStrip
+						 $menuribbon.imagescalingsize = new-object System.Drawing.Size([int]($ctscale * 16),[int]($ctscale * 16))
                          $b.Controls.Add($global:menuribbon)
                          $global:xmen = $true
                      }
@@ -790,10 +1037,7 @@ function decrypt ($a, $b){
                              $item.text = $split
                              $item.Add_Click({
                                      &menuitemclick $this
-                             })
-                             $item.Add_MouseUp({
-                                     &menuitemmouseup $this
-                             })                              
+                             })                           
                          } 
                          else {
                              $item = new-object System.Windows.Forms.ToolStripSeparator
@@ -804,8 +1048,17 @@ function decrypt ($a, $b){
                      }   
                      return $xmenutitle                  
                  }
+				 taskicon {
+					$taskicon = New-Object System.Windows.Forms.NotifyIcon
+					$taskicon.Text = $e
+					$taskicon.Icon = $d
+					$taskicon.Visible = $true
+					return $taskicon
+				 }
                  toolstrip {
                      $toolbuttons = New-Object System.Windows.Forms.ToolStrip
+					 $toolbuttons.imagescalingsize = new-object System.Drawing.Size([int]($ctscale * 16),[int]($ctscale * 16))
+					 $toolbuttons.Height = $toolbuttons.Height * $ctscale
                      foreach ($split in $d.split(",")) {
                          if ($split -ne "-") {
                              $item = new-object System.Windows.Forms.ToolStripButton
@@ -861,20 +1114,25 @@ function decrypt ($a, $b){
              $Form = [vdsForm] @{
              ClientSize = New-Object System.Drawing.Point 0,0}
              $Form.Text = $b
-             $Form.Top = $c
-             $Form.Left = $d
-             $Form.Width = $e
-             $Form.Height = $f
+             $Form.Top = $c * $ctscale
+              $Form.Left = $d * $ctscale
+             $Form.Width = $e * $ctscale
+             $Form.Height = $f * $ctscale
              return $Form
          }
          cursor {
              $b.Cursor = $c
          } #https://docs.microsoft.com/en-us/dotnet/api/system.windows.forms.cursors.appstarting?view=netframework-4.7.2
-         enable {
-             $b.enabled = $true
-         }
+
          disable {
              $b.enabled = $false
+         }
+		 element {
+			$q = $b.controls | where{$_.name -eq $c}
+			return $q
+		 }
+		 enable {
+             $b.enabled = $true
          }
          focus {
              $b.focus()
@@ -882,12 +1140,297 @@ function decrypt ($a, $b){
          hide {
              $b.visible = $false
          }
+		 load {
+			if (file $b){ 
+			$form = dialog create # $c $d $e $f $g
+			$mFormObj = Import-Clixml $b
+			Foreach ($mElement in $mFormObj){ 
+				$form.controls.add((AddControl2 $mElement)) 
+			}
+			
+			inifile open $b
+
+if ($(iniread Form AcceptButton) -ne "") {
+$form.AcceptButton	 				= $(iniread Form AcceptButton)
+}
+if ($(iniread Form ActiveControl) -ne "") {
+$form.ActiveControl	 				= $(iniread Form ActiveControl)
+}
+if ($(iniread Form ActiveMdiChild) -ne "") {
+$form.ActiveMdiChild				= $(iniread Form ActiveMdiChild)
+}
+if ($(iniread Form AllowDrop) -ne "") {
+$form.AllowDrop	 					= $(iniread Form AllowDrop)
+}
+if ($(iniread Form AllowTransparency) -ne "") {
+$form.AllowTransparency				= $(iniread Form AllowTransparency)
+}
+if ($(iniread Form Anchor) -ne "") {
+$form.Anchor	 					= $(iniread Form Anchor)
+}
+if ($(iniread Form AutoScale) -ne "") {
+$form.AutoScale	 					= $(iniread Form AutoScale)
+}
+if ($(iniread Form AutoScaleBaseSize) -ne "") {
+$form.AutoScaleBaseSize				= $(iniread Form AutoScaleBaseSize)
+}
+if ($(iniread Form AutoScaleDimensions) -ne "") {
+$form.AutoScaleDimensions			= $(iniread Form AutoScaleDimensions)
+}
+if ($(iniread Form AutoScaleMode) -ne "") {
+$form.AutoScaleMode					= $(iniread Form AutoScaleMode)
+}
+if ($(iniread Form AutoScroll) -ne "") {
+$form.AutoScroll					= $(iniread Form AutoScroll)
+}
+if ($(iniread Form AutoScrollMargin) -ne "") {
+$form.AutoScrollMargin				= $(iniread Form AutoScrollMargin)
+}
+if ($(iniread Form AutoScrollMinSize) -ne "") {
+$form.AutoScrollMinSize				= $(iniread Form AutoScrollMinSize)
+}
+if ($(iniread Form AutoScrollOffset) -ne "") {
+$form.AutoScrollOffset				= $(iniread Form AutoScrollOffset)
+}
+if ($(iniread Form AutoScrollPosition) -ne "") {
+$form.AutoScrollPosition			= $(iniread Form AutoScrollPosition)
+}
+if ($(iniread Form AutoSize) -ne "") {
+$form.AutoSize						= $(iniread Form AutoSize)
+}
+if ($(iniread Form AutoSizeMode) -ne "") {
+$form.AutoSizeMode					= $(iniread Form AutoSizeMode)
+}
+if ($(iniread Form AutoValidate) -ne "") {
+$form.AutoValidate					= $(iniread Form AutoValidate)
+}
+if ($(iniread Form BackColor) -ne "") {
+$form.BackColor						= $(iniread Form BackColor)
+}
+if ($(iniread Form BackgroundImage) -ne "") {
+$form.BackgroundImage				= $(iniread Form BackgroundImage)
+}
+if ($(iniread Form BackgroundImageLayout) -ne "") {
+$form.BackgroundImageLayout			= $(iniread Form BackgroundImageLayout)
+}
+if ($(iniread Form BindingContext) -ne "") {
+$form.BindingContext				= $(iniread Form BindingContext)
+}
+if ($(iniread Form Bottom) -ne "") {
+$form.Bottom						= $(iniread Form Bottom)
+}
+if ($(iniread Form Bounds) -ne "") {
+$form.Bounds						= $(iniread Form Bounds)
+}
+if ($(iniread Form CancelButton) -ne "") {
+$form.CancelButton					= $(iniread Form CancelButton)
+}
+if ($(iniread Form Capture) -ne "") {
+$form.Capture						= $(iniread Form Capture)
+}
+if ($(iniread Form CausesValidation) -ne "") {
+$form.CausesValidation				= $(iniread Form CausesValidation)
+}
+if ($(iniread Form ClientRectangle) -ne "") {
+$form.ClientRectangle				= $(iniread Form ClientRectangle)
+}
+if ($(iniread Form ClientSize) -ne "") {
+$form.ClientSize					= $(iniread Form ClientSize)
+}
+if ($(iniread Form ContextMenu) -ne "") {
+$form.ContextMenu					= $(iniread Form ContextMenu)
+}
+if ($(iniread Form ContextMenuStrip) -ne "") {
+$form.ContextMenuStrip				= $(iniread Form ContextMenuStrip)
+}
+if ($(iniread Form ControlBox) -ne "") {
+$form.ControlBox					= $(iniread Form ControlBox)
+}
+if ($(iniread Form CurrentAutoScaleDimensions) -ne "") {
+$form.CurrentAutoScaleDimensions	= $(iniread Form CurrentAutoScaleDimensions)
+}
+if ($(iniread Form Cursor) -ne "") {
+$form.Cursor						= $(iniread Form Cursor)
+}
+if ($(iniread Form DesktopBounds) -ne "") {
+$form.DesktopBounds					= $(iniread Form DesktopBounds)
+}
+if ($(iniread Form DesktopLocation) -ne "") {
+$form.DesktopLocation				= $(iniread Form DesktopLocation)
+}
+if ($(iniread Form DialogResult) -ne "") {
+$form.DialogResult					= $(iniread Form DialogResult)
+}
+if ($(iniread Form Dock) -ne "") {
+$form.Dock							= $(iniread Form Dock)
+}
+if ($(iniread Form DockPadding) -ne "") {
+$form.DockPadding					= $(iniread Form DockPadding)
+}
+if ($(iniread Form Enabled) -ne "") {
+$form.Enabled						= $(iniread Form Enabled)
+}
+if ($(iniread Form Font) -ne "") {
+$form.Font							= $(iniread Form Font)
+}
+if ($(iniread Form ForeColor) -ne "") {
+$form.ForeColor						= $(iniread Form ForeColor)
+}
+if ($(iniread Form FormBorderStyle) -ne "") {
+$form.FormBorderStyle				= $(iniread Form FormBorderStyle)
+}
+if ($(iniread Form Height) -ne "") {
+$form.Height						= (($(iniread Form Height) / 1) * $ctscale)
+}
+if ($(iniread Form HelpButton) -ne "") {
+$form.HelpButton					= $(iniread Form HelpButton)
+}
+if ($(iniread Form HorizontalScroll) -ne "") {
+$form.HorizontalScroll				= $(iniread Form HorizontalScroll)
+}
+if ($(iniread Form Icon) -ne "") {
+$form.Icon							= $(iniread Form Icon)
+}
+if ($(iniread Form IsMdiChild) -ne "") {
+$form.IsMdiChild					= $(iniread Form IsMdiChild)
+}
+if ($(iniread Form IsMdiContainer) -ne "") {
+$form.IsMdiContainer				= $(iniread Form IsMdiContainer)
+}
+if ($(iniread Form IsRestrictedWindow) -ne "") {
+$form.IsRestrictedWindow			= $(iniread Form IsRestrictedWindow)
+}
+if ($(iniread Form KeyPreview) -ne "") {
+$form.KeyPreview					= $(iniread Form KeyPreview)
+}
+if ($(iniread Form Left) -ne "") {
+$form.Left							= (($(iniread Form Left) / 1) * $ctscale)
+}
+if ($(iniread Form MainMenuStrip) -ne "") {
+$form.MainMenuStrip					= $(iniread Form MainMenuStrip)
+}
+if ($(iniread Form Margin) -ne "") {
+$form.Margin						= $(iniread Form Margin)
+}
+if ($(iniread Form MaximizeBox) -ne "") {
+$form.MaximizeBox					= $(iniread Form MaximizeBox)
+}
+if ($(iniread Form MaximumSize) -ne "") {
+$form.MaximumSize					= $(iniread Form MaximumSize)
+}
+if ($(iniread Form MdiChildren) -ne "") {
+$form.MdiChildren					= $(iniread Form MdiChildren)
+}
+if ($(iniread Form MdiParent) -ne "") {
+$form.MdiParent						= $(iniread Form MdiParent)
+}
+if ($(iniread Form Menu) -ne "") {
+$form.Menu							= $(iniread Form Menu)
+}
+if ($(iniread Form MergedMenu) -ne "") {
+$form.MergedMenu					= $(iniread Form MergedMenu)
+}
+if ($(iniread Form MinimizeBox) -ne "") {
+$form.MinimizeBox					= $(iniread Form MinimizeBox)
+}
+if ($(iniread Form MinimumSize) -ne "") {
+$form.MinimumSize					= $(iniread Form MinimumSize)
+}
+if ($(iniread Form Modal) -ne "") {
+$form.Modal							= $(iniread Form Modal)
+}
+if ($(iniread Form Opacity) -ne "") {
+$form.Opacity						= $(iniread Form Opacity)
+}
+if ($(iniread Form OwnedForms) -ne "") {
+$form.OwnedForms					= $(iniread Form OwnedForms)
+}
+if ($(iniread Form Owner) -ne "") {
+$form.Owner							= $(iniread Form Owner)
+}
+if ($(iniread Form Padding) -ne "") {
+$form.Padding						= $(iniread Form Padding)
+}
+if ($(iniread Form ParentForm) -ne "") {
+$form.ParentForm					= $(iniread Form ParentForm)
+}
+if ($(iniread Form RestoreBounds) -ne "") {
+$form.RestoreBounds					= $(iniread Form RestoreBounds)
+}
+if ($(iniread Form RightToLeft) -ne "") {
+$form.RightToLeft					= $(iniread Form RightToLeft)
+}
+if ($(iniread Form RightToLeftLayout) -ne "") {
+$form.RightToLeftLayout				= $(iniread Form RightToLeftLayout)
+}
+if ($(iniread Form ShowIcon) -ne "") {
+$form.ShowIcon						= $(iniread Form ShowIcon)
+}
+if ($(iniread Form ShowInTaskbar) -ne "") {
+$form.ShowInTaskbar					= $(iniread Form ShowInTaskbar)
+}
+if ($(iniread Form Size) -ne "") {
+$form.Size							= $(iniread Form Size)
+}
+if ($(iniread Form SizeGripStyle) -ne "") {
+$form.SizeGripStyle					= $(iniread Form SizeGripStyle)
+}
+if ($(iniread Form StartPosition) -ne "") {
+$form.StartPosition					= $(iniread Form StartPosition)
+}
+if ($(iniread Form TabIndex) -ne "") {
+$form.TabIndex						= $(iniread Form TabIndex)
+}
+if ($(iniread Form TabStop) -ne "") {
+$form.TabStop						= $(iniread Form TabStop)
+}
+if ($(iniread Form Tag) -ne "") {
+$form.Tag							= $(iniread Form Tag)
+}
+if ($(iniread Form Text) -ne "") {
+$form.Text							= $(iniread Form Text)
+}
+if ($(iniread Form Top) -ne "") {
+$form.Top							= (($(iniread Form Top) / 1) * $ctscale)
+}
+if ($(iniread Form TopLevel) -ne "") {
+$form.TopLevel						= $(iniread Form TopLevel)
+}
+if ($(iniread Form TopLevelControl) -ne "") {
+$form.TopLevelControl				= $(iniread Form TopLevelControl)
+}
+if ($(iniread Form TopMost) -ne "") {
+$form.TopMost						= $(iniread Form TopMost)
+}
+if ($(iniread Form TransparencyKey) -ne "") {
+$form.TransparencyKey				= $(iniread Form TransparencyKey)
+}
+if ($(iniread Form UseWaitCursor) -ne "") {
+$form.UseWaitCursor					= $(iniread Form UseWaitCursor)
+}
+if ($(iniread Form VerticalScroll) -ne "") {
+$form.VerticalScroll				= $(iniread Form VerticalScroll)
+}
+if ($(iniread Form Visible) -ne "") {
+$form.Visible						= $(iniread Form Visible)
+}
+if ($(iniread Form Width) -ne "") {
+$form.Width							= (($(iniread Form Width) / 1) * $ctscale)
+}
+if ($(iniread Form WindowState) -ne "") {
+$form.WindowState					= $(iniread Form WindowState)
+}
+			
+			
+		return $form
+			}
+		}
          name {
              $b.Name = $c
          }
          popup { 
                      $xpopup = New-Object System.Windows.Forms.ContextMenuStrip
-                     
+                     $xpopup.imagescalingsize = new-object System.Drawing.Size([int]($ctscale * 16),[int]($ctscale * 16))
                      foreach ($split in $c.split(",")) {
                          if ($split -ne "-")
                          {   $item = new-object System.Windows.Forms.ToolStripMenuItem
@@ -904,9 +1447,6 @@ function decrypt ($a, $b){
                             }
                              $item.text = $isplit[0]
                              $item.Add_Click({&menuitemclick $this})
-                             $item.Add_MouseUp({
-                                     &menuitemmouseup $this
-                             }) 
                          }
                          else {
                              $item = new-object System.Windows.Forms.ToolStripSeparator
@@ -957,10 +1497,10 @@ function decrypt ($a, $b){
               $b.Text = $c
           }
           setpos {
-              $b.Top = $c
-              $b.Left = $d
-              $b.Width = $e
-              $b.Height = $f
+              $b.Top = $c * $ctscale
+              $b.Left = $d * $ctscale
+              $b.Width = $e * $ctscale
+              $b.Height = $f * $ctscale
           }
           settip {
               $t = New-Object System.Windows.Forms.Tooltip
@@ -1053,7 +1593,154 @@ function decrypt ($a, $b){
       #>  
 }
 
-function differ ($a,$b) {
+function dialogshell($a)
+{
+	switch ($a){
+		"ide" {
+			if ((get-host).version.major -eq 7) {
+				if ((Get-Module -ListAvailable vds).count -gt 1){
+					start-process -filepath pwsh.exe -argumentlist '-ep bypass','-windowstyle hidden','-sta',"-file $(chr 34)$(path $(Get-Module -ListAvailable vds)[0].path)\examples\vds-ide.ps1$(chr 34)"
+				}
+				else {
+					start-process -filepath pwsh.exe -argumentlist '-ep bypass','-windowstyle hidden','-sta',"-file $(chr 34)$(path $(Get-Module -ListAvailable vds).path)\examples\vds-ide.ps1$(chr 34)"
+				}
+			}
+			else {
+				if ((Get-Module -ListAvailable vds).count -gt 1){
+					start-process -filepath powershell.exe -argumentlist '-ep bypass','-windowstyle hidden','-sta',"-file $(chr 34)$(path $(Get-Module -ListAvailable vds)[0].path)\examples\vds-ide.ps1$(chr 34)"
+				}
+				else {
+					start-process -filepath powershell.exe -argumentlist '-ep bypass','-windowstyle hidden','-sta',"-file $(chr 34)$(path $(Get-Module -ListAvailable vds).path)\examples\vds-ide.ps1$(chr 34)"
+				}
+			}
+		}
+		"register"{
+			
+			if ((Get-Module -ListAvailable vds).count -gt 1){
+				$module = $(path $(Get-Module -ListAvailable vds)[0].path)
+			}
+			else {
+				$module = $(path $(Get-Module -ListAvailable vds).path)
+			}
+			
+			If (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {    
+				console "Please run powershell elevated to invoke this command."
+			}
+			else {
+				if ((get-host).version.major -eq 7) {
+					registry newkey  "HKLM:\Software\Classes\" .ds1
+					registry newitem "HKLM:\Software\Classes\.ds1\" "(Default)" String "DialogShell.Script"
+					registry newkey "HKLM:\Software\Classes\" "DialogShell.Script"
+					registry newkey "HKLM:\Software\Classes\DialogShell.Script\" "DefaultIcon"
+					registry newitem "HKLM:\Software\Classes\DialogShell.Script\DefaultIcon" "(Default)" String "$(chr 34)$module\res\terminal.ico$(chr 34)"
+					registry newkey "HKLM:\Software\Classes\DialogShell.Script\" "Shell"
+					registry newkey "HKLM:\Software\Classes\DialogShell.Script\Shell\" "Open"
+					registry newkey "HKLM:\Software\Classes\DialogShell.Script\Shell\Open\" "Command"
+					registry newitem "HKLM:\Software\Classes\DialogShell.Script\Shell\Open\Command" "(Default)" String "pwsh.exe -windowstyle hidden -ep bypass -sta -file $(chr 34)$module\compile\dialogshell.ps1$(chr 34) $(chr 34)%1$(chr 34) -cpath"
+					registry newkey "HKLM:\Software\Classes\DialogShell.Script\Shell\" "Edit"
+					registry newkey "HKLM:\Software\Classes\DialogShell.Script\Shell\Edit\" "Command"
+					registry newitem "HKLM:\Software\Classes\DialogShell.Script\Shell\Edit\Command" "(Default)" String "pwsh.exe -windowstyle hidden -ep bypass -sta -file $(chr 34)$module\examples\vds-ide.ps1$(chr 34) $(chr 34)%1$(chr 34)"
+					registry newkey "HKLM:\Software\Classes\DialogShell.Script\Shell\" "Debug"
+					registry newkey "HKLM:\Software\Classes\DialogShell.Script\Shell\Debug\" "Command"
+					registry newitem "HKLM:\Software\Classes\DialogShell.Script\Shell\Debug\Command" "(Default)" String "pwsh.exe -ep bypass -sta -file $(chr 34)$module\compile\dialogshell.ps1$(chr 34) $(chr 34)%1$(chr 34) -cpath"
+					#																					
+					registry newkey "HKLM:\Software\Classes\" .dsproj
+					registry newitem "HKLM:\Software\Classes\.dsproj\" "(Default)" String "DialogShell.Project"
+					registry newkey "HKLM:\Software\Classes\" "DialogShell.Project"
+					registry newkey "HKLM:\Software\Classes\DialogShell.Project\" "DefaultIcon"
+					registry newitem "HKLM:\Software\Classes\DialogShell.Project\DefaultIcon" "(Default)" String "$module\res\icon.ico"
+					registry newkey "HKLM:\Software\Classes\DialogShell.Project\" "Shell"
+					registry newkey "HKLM:\Software\Classes\DialogShell.Project\Shell\" "Open"
+					registry newkey "HKLM:\Software\Classes\DialogShell.Project\Shell\Open\" "Command"
+					registry newitem "HKLM:\Software\Classes\DialogShell.Project\Shell\Open\Command" "(Default)" String "pwsh.exe -windowstyle hidden -ep bypass -sta -file $(chr 34)$module\examples\vds-ide.ps1$(chr 34) $(chr 34)%1$(chr 34)"
+					registry newkey "HKLM:\Software\Classes\" .dsform
+					registry newitem "HKLM:\Software\Classes\.dsform\" "(Default)" String "DialogShell.Form"
+					registry newkey "HKLM:\Software\Classes\" "DialogShell.Form"
+					registry newkey "HKLM:\Software\Classes\DialogShell.Form\" "Shell"
+					registry newkey "HKLM:\Software\Classes\DialogShell.Form\" "DefaultIcon"
+					registry newitem "HKLM:\Software\Classes\DialogShell.Form\DefaultIcon" "(Default)" String "$module\res\application.ico"
+					registry newkey "HKLM:\Software\Classes\DialogShell.Form\Shell\" "Open"
+					registry newkey "HKLM:\Software\Classes\DialogShell.Form\Shell\Open\" "Command"
+					registry newitem "HKLM:\Software\Classes\DialogShell.Form\Shell\Open\Command" "(Default)" String "pwsh.exe -windowstyle hidden -ep bypass -sta -file $(chr 34)$module\examples\designer.ps1$(chr 34) $(chr 34)%1$(chr 34)"
+					directory create "c:\programdata\microsoft\windows\start menu\programs\Visual DialogShell"
+					link ("C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Visual DialogShell\Visual DialogShell IDE.lnk") ("pwsh.exe") ("$module\examples") ("$module\res\icon.ico,0") ("-windowstyle hidden -ep bypass -sta -file $(chr 34)$module\examples\vds-ide.ps1$(chr 34)")
+                    link ("C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Visual DialogShell\DialogShell Console.lnk") ("pwsh.exe") ("$module\compile") ("$module\res\terminal.ico,0") ("-ep bypass -sta -file $(chr 34)$module\compile\dialogshell.ps1$(chr 34)")
+				}
+				else {
+					registry newkey  "HKLM:\Software\Classes\" .ds1
+					registry newitem "HKLM:\Software\Classes\.ds1\" "(Default)" String "DialogShell.Script"
+					registry newkey "HKLM:\Software\Classes\" "DialogShell.Script"
+					registry newkey "HKLM:\Software\Classes\DialogShell.Script\" "DefaultIcon"
+					registry newitem "HKLM:\Software\Classes\DialogShell.Script\DefaultIcon" "(Default)" String "$(chr 34)$module\res\terminal.ico$(chr 34)"
+					registry newkey "HKLM:\Software\Classes\DialogShell.Script\" "Shell"
+					registry newkey "HKLM:\Software\Classes\DialogShell.Script\Shell\" "Open"
+					registry newkey "HKLM:\Software\Classes\DialogShell.Script\Shell\Open\" "Command"
+					registry newitem "HKLM:\Software\Classes\DialogShell.Script\Shell\Open\Command" "(Default)" String "powershell.exe -windowstyle hidden -ep bypass -sta -file $(chr 34)$module\compile\dialogshell.ps1$(chr 34) $(chr 34)%1$(chr 34) -cpath"
+					registry newkey "HKLM:\Software\Classes\DialogShell.Script\Shell\" "Edit"
+					registry newkey "HKLM:\Software\Classes\DialogShell.Script\Shell\Edit\" "Command"
+					registry newitem "HKLM:\Software\Classes\DialogShell.Script\Shell\Edit\Command" "(Default)" String "powershell.exe -windowstyle hidden -ep bypass -sta -file $(chr 34)$module\examples\vds-ide.ps1$(chr 34) $(chr 34)%1$(chr 34)"
+					registry newkey "HKLM:\Software\Classes\DialogShell.Script\Shell\" "Debug"
+					registry newkey "HKLM:\Software\Classes\DialogShell.Script\Shell\Debug\" "Command"
+					registry newitem "HKLM:\Software\Classes\DialogShell.Script\Shell\Debug\Command" "(Default)" String "powershell.exe -ep bypass -sta -file $(chr 34)$module\compile\dialogshell.ps1$(chr 34) $(chr 34)%1$(chr 34) -cpath"
+					#																					
+					registry newkey "HKLM:\Software\Classes\" .dsproj
+					registry newitem "HKLM:\Software\Classes\.dsproj\" "(Default)" String "DialogShell.Project"
+					registry newkey "HKLM:\Software\Classes\" "DialogShell.Project"
+					registry newkey "HKLM:\Software\Classes\DialogShell.Project\" "DefaultIcon"
+					registry newitem "HKLM:\Software\Classes\DialogShell.Project\DefaultIcon" "(Default)" String "$module\res\icon.ico"
+					registry newkey "HKLM:\Software\Classes\DialogShell.Project\" "Shell"
+					registry newkey "HKLM:\Software\Classes\DialogShell.Project\Shell\" "Open"
+					registry newkey "HKLM:\Software\Classes\DialogShell.Project\Shell\Open\" "Command"
+					registry newitem "HKLM:\Software\Classes\DialogShell.Project\Shell\Open\Command" "(Default)" String "powershell.exe -windowstyle hidden -ep bypass -sta -file $(chr 34)$module\examples\vds-ide.ps1$(chr 34) $(chr 34)%1$(chr 34)"
+					registry newkey "HKLM:\Software\Classes\" .dsform
+					registry newitem "HKLM:\Software\Classes\.dsform\" "(Default)" String "DialogShell.Form"
+					registry newkey "HKLM:\Software\Classes\" "DialogShell.Form"
+					registry newkey "HKLM:\Software\Classes\DialogShell.Form\" "Shell"
+					registry newkey "HKLM:\Software\Classes\DialogShell.Form\" "DefaultIcon"
+					registry newitem "HKLM:\Software\Classes\DialogShell.Form\DefaultIcon" "(Default)" String "$module\res\application.ico"
+					registry newkey "HKLM:\Software\Classes\DialogShell.Form\Shell\" "Open"
+					registry newkey "HKLM:\Software\Classes\DialogShell.Form\Shell\Open\" "Command"
+					registry newitem "HKLM:\Software\Classes\DialogShell.Form\Shell\Open\Command" "(Default)" String "powershell.exe  -windowstyle hidden -ep bypass -sta -file $(chr 34)$module\examples\designer.ps1$(chr 34) $(chr 34)%1$(chr 34)"
+					directory create "c:\programdata\microsoft\windows\start menu\programs\Visual DialogShell"
+					link ("C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Visual DialogShell\Visual DialogShell IDE.lnk") ("powershell.exe") ("$module\examples") ("$module\res\icon.ico,0") ("-windowstyle hidden -ep bypass -sta -file $(chr 34)$module\examples\vds-ide.ps1$(chr 34)")
+                    link ("C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Visual DialogShell\DialogShell Console.lnk") ("powershell.exe") ("$module\compile") ("$module\res\terminal.ico,0") ("-ep bypass -sta -file $(chr 34)$module\compile\dialogshell.ps1$(chr 34)")					
+				}
+			
+			    directory create ([Environment]::GetFolderPath("MyDocuments")+"\DialogShell")
+				directory create ([Environment]::GetFolderPath("MyDocuments")+"\DialogShell\plugins")
+				directory create ([Environment]::GetFolderPath("MyDocuments")+"\DialogShell\wizards")
+				directory create ([Environment]::GetFolderPath("MyDocuments")+"\DialogShell\examples")
+				directory create ([Environment]::GetFolderPath("MyDocuments")+"\DialogShell\examples\en-US")
+				directory create ([Environment]::GetFolderPath("MyDocuments")+"\DialogShell\res")
+				directory create ([Environment]::GetFolderPath("MyDocuments")+"\DialogShell\elements")
+				file copy ("$module\res\*") ([Environment]::GetFolderPath("MyDocuments")+"\DialogShell\res")
+				file copy ("$module\plugins\*") ([Environment]::GetFolderPath("MyDocuments")+"\DialogShell\plugins")
+				file copy ("$module\wizards\*") ([Environment]::GetFolderPath("MyDocuments")+"\DialogShell\wizards")
+				file copy ("$module\elements\*") ([Environment]::GetFolderPath("MyDocuments")+"\DialogShell\elements")
+				file copy ("$module\examples\*") ([Environment]::GetFolderPath("MyDocuments")+"\DialogShell\examples")
+				file copy ("$module\examples\en-us\*") ([Environment]::GetFolderPath("MyDocuments")+"\DialogShell\examples\en-us")
+			
+			}
+		}
+		"unregister"
+		{
+			if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {    
+				console "Please run powershell elevated to invoke this command."
+			}
+			else {
+				registry deletekey "HKLM:\Software\Classes\.ds1"
+				registry deletekey "HKLM:\Software\Classes\DialogShell.Script"
+				registry deletekey "HKLM:\Software\Classes\.dsproj"
+				registry deletekey "HKLM:\Software\Classes\DialogShell.Project"
+				registry deletekey "HKLM:\Software\Classes\.dsform"
+				registry deletekey "HKLM:\Software\Classes\DialogShell.Form"
+				directory delete "c:\programdata\microsoft\windows\start menu\programs\Visual DialogShell"
+			}
+		}
+	}
+}
+
+function differ($a,$b) {
     return $a - $b
 <#
     .SYNOPSIS
@@ -1159,16 +1846,16 @@ function dlgname($a) {
 function dlgpos ($a,$b) {
     switch ($b) {
         T {
-            return $a.Top
+            return $a.Top / $ctscale
         }
         L {
-            return $a.Left
+            return $a.Left / $ctscale
         }
         W {
-            return $a.Width
+            return $a.Width / $ctscale
         }
         'H' {
-            return $a.Height
+            return $a.Height / $ctscale
         }
     }
 <#
@@ -1221,17 +1908,17 @@ function dlgtext($a) {
 }
 
 function encrypt ($a,$b){
-    $SecureString = $a | ConvertTo-SecureString -AsPlainText -Force
-    if ($b){
-            $AESKey = New-Object Byte[] 32
-            [Security.Cryptography.RNGCryptoServiceProvider]::Create().GetBytes($AESKey)
-            $encrypt = $SecureString | ConvertFrom-SecureString -Key $AESKey
-            return $encrypt+$fieldsep+$AESKey
-    }
-    else
-    {
-            return ($SecureString | ConvertFrom-SecureString)
-    }
+	$SecureString = $a | ConvertTo-SecureString -AsPlainText -Force
+	if ($b){
+			$AESKey = New-Object Byte[] 32
+			[Security.Cryptography.RNGCryptoServiceProvider]::Create().GetBytes($AESKey)
+			$encrypt = $SecureString | ConvertFrom-SecureString -Key $AESKey
+			return $encrypt+$fieldsep+$AESKey
+	}
+	else
+	{
+			return ($SecureString | ConvertFrom-SecureString)
+	}
 <#
     .SYNOPSIS
     Decrypt an encrypted secret.
@@ -1239,14 +1926,14 @@ function encrypt ($a,$b){
     .DESCRIPTION
      VDS
     $encrypt = 'Hello'
-    $b = $(encrypt $encrypt 'Aes')
-    $vals = $b.Split($(fieldsep))
-    info $(decrypt $vals[0] $vals[1])
+	$b = $(encrypt $encrypt 'Aes')
+	$vals = $b.Split($(fieldsep))
+	info $(decrypt $vals[0] $vals[1])
     
     .LINK
     https://dialogshell.com/vds/help/index.php/encrypt
 #>
-} 
+}
 
 function env($a) {
     $loc = Get-Location | select -ExpandProperty Path
@@ -1977,7 +2664,10 @@ return $(select-object -inputobject $a -expandproperty $b)
 
 function ext($a) {
     $split = $a.Split('.')
+	if ($split.count -gt 1)
+	{
     return $split[$split.count -1]
+	}
 <#
     .SYNOPSIS
     returns the three character extension of a file name.
@@ -2660,8 +3350,8 @@ function info($a,$b) {
  }
 
 
-function input($a,$b) {
-    $input = [Microsoft.VisualBasic.Interaction]::InputBox($a,$b)
+function input($a,$b,$c) {
+    $input = [Microsoft.VisualBasic.Interaction]::InputBox($a,$b,$c)
     return $input
 <#
     .SYNOPSIS
@@ -2787,12 +3477,21 @@ function like ($a,$b) {
     $ShortCut.TargetPath=$b
     $ShortCut.Arguments=$e
     $ShortCut.WorkingDirectory = $c
-    $ShortCut.WindowStyle = 1;
+	if ($g -ne $null){
+		$ShortCut.WindowStyle = ($g/1)
+	}
+	else {
+		$ShortCut.WindowStyle = 1
+	}
     $ShortCut.Hotkey = ""
     $ShortCut.IconLocation = $d
-    $ShortCut.DESCRIPTION
-     VDS = ""
     $ShortCut.Save()
+	
+if ($f -eq $true) {
+	$bytes = [System.IO.File]::ReadAllBytes($a)
+	$bytes[0x15] = $bytes[0x15] -bor 0x20
+	[System.IO.File]::WriteAllBytes($a, $bytes)
+}
  <#
     .SYNOPSIS
     Creates a shortcut
@@ -3028,7 +3727,7 @@ function lower($a) {
 }
 
 function match($a,$b,$c) {
-    if ($c = $null){
+    if ($c -eq $null){
         $c = -1
     }
     else {
@@ -3801,6 +4500,9 @@ function resource ($a,$b,$c) {
             $import = [System.IO.File]::ReadAllBytes($b)
             return [System.Convert]::ToBase64String($import)
         }
+		encode {
+			return [System.Convert]::ToBase64String($b)
+		}
         export{
             $export = [System.Convert]::FromBase64String($b)
             [System.IO.File]::WriteAllBytes($c,$export)
@@ -3879,6 +4581,14 @@ function savedlg($a,$b,$c){
 #>  
 }
 
+function screeninfo($a) {
+	switch ($a) {
+	height{[System.Windows.Forms.SystemInformation]::VirtualScreen.height}
+	width {[System.Windows.Forms.SystemInformation]::VirtualScreen.width}
+	scale {return $ctscale}
+	}
+}
+
 function selected($a) {
     return CountRows($a.SelectedItems)
 <#
@@ -3907,13 +4617,28 @@ function selenium ($a,$b,$c,$d) {
             $global:selenium.Navigate().GoToURL($b) 
         }
         get {
-            return $global:selenium.FindElementsByXPath("//*[contains(@$b, '$c')]")
+			if ($c -ne $null){
+				return $global:selenium.FindElementsByXPath("//*[contains(@$b, '$c')]")
+			}
+			else {
+				return $global:selenium.FindElementsByXPath($b)
+			}
         }
         set {
-            $global:selenium.FindElementsByXPath("//*[contains(@$b, '$c')]").SendKeys($d)
+			if ($d -ne $null) {
+				$global:selenium.FindElementsByXPath("//*[contains(@$b, '$c')]").SendKeys($d)
+			}
+			else {
+				$global:selenium.FindElementsByXPath($b).SendKeys($c)
+			}
         }
         click {
-            $global:selenium.FindElementsByXPath("//*[contains(@$b, '$c')]").Click()
+			if ($c -ne $null) {
+				$global:selenium.FindElementsByXPath("//*[contains(@$b, '$c')]").Click()
+			}
+			else {
+				$global:selenium.FindElementsByXPath($b).Click()
+			}
         }
         stop {
             $global:selenium.Close()
@@ -4180,11 +4905,14 @@ function sum($a,$b) {
 #>
 } #partial implementation - only accepts two params
 
+function dsr(){
+	return $args[0]
+}
+
 function sysinfo($a) {
     switch ($a) {
         freemem {
-            $return = Get-WmiObject Win32_OperatingSystem | fl FreePhysicalMemory | Out-String
-            return $return.split(':')[1].Trim() 
+			return (Get-CIMInstance Win32_OperatingSystem | Select FreePhysicalMemory).FreePhysicalMemory
         } 
         pixperin {
         return $(regread 'hkcu:\Control Panel\Desktop\WindowMetrics' 'AppliedDpi')
@@ -4221,7 +4949,7 @@ function sysinfo($a) {
             return $major.Trim()+'.'+$minor.Trim()+'.'+$build.Trim()+'.'+$revision.Trim() 
         } 
         dsver {
-        return '0.3.1.3'
+        return '0.3.3.8'
         }
         winboot {
             $return = Get-CimInstance -ClassName win32_operatingsystem | fl lastbootuptime | Out-String
@@ -4238,6 +4966,9 @@ function sysinfo($a) {
         language {
             return GET-WinSystemLocale |Select-Object -expandproperty DisplayName
         }
+		scale {
+			return $ctscale
+		}
     }
 <#
     .SYNOPSIS
@@ -4806,8 +5537,13 @@ function winclass($a) {
 #>
 } 
 
-function windir($a) {
+function windir($a,$b) {
+	if ($a -like "s"){
+		return [System.Environment]::SystemDirectory
+	}
+	else {
     return $(env windir)
+	}
 <#
     .SYNOPSIS
     Returns the windows directory
@@ -5257,4 +5993,3 @@ function zip($a,$b,$c)
     https://dialogshell.com/vds/help/index.php/zero
 #>
 }
-
